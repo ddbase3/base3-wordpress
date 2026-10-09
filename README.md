@@ -73,19 +73,5 @@ WordPress plugin updates or reinstallations that replace the entire plugin
 directory can delete independently deployed module directories. Use controlled
 in-place updates that preserve `modules/` rather than a replacement installation.
 
-## Renaming from BASE3 Bridge
-
-For an existing WordPress site, deactivate the old `base3-bridge` plugin while
-its original files still exist. Rename the directory from `base3-bridge/` to
-`base3-wordpress/`, rename the main file from `base3-bridge.php` to
-`base3-wordpress.php`, apply the rename patch from the WordPress installation
-root, then activate `base3-wordpress`. Rebuild the class map and verify installed
-modules and admin/frontend entry points. All installed module directories stay
-where they are beneath the renamed directory.
-
-The internal PHP namespace `Base3WordPressBridge` is deliberately unchanged;
-this packaging rename does not modify public PHP class names or the separate
-`Base3WordPress` and `Base3WordPressLab` BASE3 modules.
-
 Licensed under GPL-3.0-or-later. The independently installed BASE3 modules retain
 their own copyright and licensing terms.

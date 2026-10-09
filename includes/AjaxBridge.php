@@ -17,10 +17,17 @@ final class AjaxBridge {
 	private const DISPLAY_DATA_PARAMETER = 'base3_display_data';
 	private const MAX_DISPLAY_DATA_LENGTH = 1048576;
 
+	/** WordPress owns the transport action; BASE3 keeps POST action for its output handler. */
+	public static function prepareRequest(): void {
+		if (!wp_doing_ajax() || ($_GET['action'] ?? null) !== 'base3_dispatch') return;
+		$_REQUEST['action'] = 'base3_dispatch';
+	}
+
 	public static function dispatch(): void {
 		Runtime::boot();
-		$name = isset($_REQUEST['name']) && is_scalar($_REQUEST['name']) ? (string) wp_unslash($_REQUEST['name']) : '';
-		$out = isset($_REQUEST['out']) && is_scalar($_REQUEST['out']) ? (string) wp_unslash($_REQUEST['out']) : 'html';
+		// The URL identifies the output; POST may use the same field names for its own data.
+		$name = isset($_GET['name']) && is_scalar($_GET['name']) ? (string) wp_unslash($_GET['name']) : '';
+		$out = isset($_GET['out']) && is_scalar($_GET['out']) ? (string) wp_unslash($_GET['out']) : 'html';
 		if (!preg_match('/^[a-z0-9_\-]+$/i', $name) || !preg_match('/^[a-z0-9]+$/i', $out)) {
 			wp_die('Invalid BASE3 request.', '', ['response' => 400]);
 		}

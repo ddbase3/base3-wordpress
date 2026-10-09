@@ -29,6 +29,7 @@ final class Runtime {
 		add_action('shutdown', [self::class, 'finish'], 99);
 		add_shortcode('base3', [BlockBridge::class, 'shortcode']);
 		add_action('base3_worker_tick', [self::class, 'runWorker']);
+		add_action('admin_init', [AjaxBridge::class, 'prepareRequest'], 0);
 		add_action('wp_ajax_base3_dispatch', [AjaxBridge::class, 'dispatch']);
 		add_action('wp_ajax_base3_filemanager', [AjaxBridge::class, 'fileManager']);
 		add_action('wp_ajax_nopriv_base3_dispatch', [AjaxBridge::class, 'dispatch']);
