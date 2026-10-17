@@ -6,11 +6,6 @@ use Base3\Accesscontrol\Api\IAccesscontrol;
 use Base3\Api\IClassMap;
 use Base3\Api\IDisplay;
 use Base3\Api\IOutput;
-use Base3WordPress\Api\IBase3WordPressSettings;
-use Base3WordPress\Adapter\WordPressFileManagerHttpService;
-use Base3WordPress\Adapter\WordPressFileUploadService;
-use ResourceFoundation\Api\IManagedFileStorageService;
-use RuntimeException;
 
 final class AjaxBridge {
 
@@ -56,46 +51,7 @@ final class AjaxBridge {
 		header('X-Content-Type-Options: nosniff');
 		echo $output instanceof IOutput ? $output->getOutput($out, true) : $display->getOutput($out, true);
 		Runtime::finish();
-		wp_die('', '', ['response' => 200]);
-	}
-
-	public static function fileManager(): void {
-		if (!self::isAuthorizedAdmin()) {
-			wp_die('BASE3 access permission or nonce missing.', '', ['response' => 403]);
-		}
-		Runtime::boot();
-		$container = Runtime::container();
-		$settings = $container->get(IBase3WordPressSettings::class);
-		if (!$settings instanceof IBase3WordPressSettings) {
-			throw new RuntimeException('BASE3 WordPress administration settings service is unavailable.');
-		}
-
-		// Identical to the ILIAS integration: the configuration owner is
-		// determined by server-side project settings, never by user input.
-		$config = null;
-		foreach ($settings->getAdministrationConfig() as $tab) {
-			foreach ($tab['displays'] ?? [] as $entry) {
-				if (($entry['name'] ?? '') !== 'chatbotconfigdisplay') continue;
-				if ($config !== null) throw new RuntimeException('Duplicate chatbot administration configuration.');
-				$config = $entry['data'] ?? null;
-			}
-		}
-		$group = is_array($config) ? trim((string) ($config['group'] ?? '')) : '';
-		$name = is_array($config) ? trim((string) ($config['name'] ?? '')) : '';
-		if ($group === '' || $name === '') {
-			throw new RuntimeException('Chatbot administration storage owner is not configured.');
-		}
-		$action = isset($_GET['fm_action']) && is_scalar($_GET['fm_action'])
-			? trim((string) wp_unslash($_GET['fm_action']))
-			: '';
-		$storage = $container->get(IManagedFileStorageService::class);
-		$handler = new WordPressFileManagerHttpService($storage, new WordPressFileUploadService($storage));
-		$handler->handle($action, $group, $name, get_current_user_id(), 50 * 1024 * 1024);
-	}
-
-	private static function isAuthorizedAdmin(): bool {
-		return current_user_can('manage_options')
-			&& check_ajax_referer('base3_admin_display', '_wpnonce', false) !== false;
+		wp_die('', '', ['response' => http_response_code() ?: 200]);
 	}
 
 	/** @return array{valid:bool,value:mixed} */
