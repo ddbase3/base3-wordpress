@@ -64,3 +64,11 @@ Operators must check actual permissions, consent/ePrivacy requirements, provider
 contracts, session persistence, security, retention and accessibility with the
 installed WordPress theme and operating environment. The source does not prove
 GDPR compliance or WCAG conformance in production.
+
+## WordPress administrator bar and docked launcher
+
+When the shared global chatbot sidebar is open, the WordPress integration
+provides `#wpadminbar` as the host header. ClientStack temporarily adjusts
+its inline layout on desktop so the header ends at the sidebar. The panel is displayed
+above the administration bar. The previous header styles are restored on
+close. This introduces no new request, tracking, storage or data recipient.
