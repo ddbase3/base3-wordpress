@@ -28,3 +28,39 @@ The controller, hosting region, external recipients, encryption arrangements,
 and applicable legal bases depend on the deployment and have not been verified
 from this repository alone. The change documented here only consolidates the
 FileManager AJAX route; it does not expand the data or storage model.
+
+## Project global chatbot launcher
+
+`Base3WordPressLab` displays the global launcher on normal frontend and admin
+pages through WordPress hooks. The frontend now uses the single ClientStack
+`GlobalChatbotLauncher` module and CSS, not a project-owned iframe launcher.
+On page load the shared ES module creates the button and panel; **only on open**
+does it fetch the existing BASE3 `chatbotdisplay` response through the generic,
+same-origin `base3_dispatch` endpoint. The render URL includes the configured
+identity `chatbot/default`, not chatbot settings, credentials or message text.
+The returned chatbot markup and scripts execute in the same WordPress page DOM;
+this differs from the former isolated same-origin iframe. The endpoint and
+content are trusted first-party BASE3 output and are governed by the existing
+host authentication and output contracts.
+
+`GlobalChatbotLauncherSettings` reads the shared presentation configuration from
+`ISettingsStore` under `global-chatbot-launcher/default`. It may persist enabled
+window modes, resize options and navigation reopening preferences. The shared
+browser launcher uses `localStorage` for last mode and panel sizes and
+`sessionStorage` for reopening an open panel across navigation; no chat messages
+are stored by the launcher. Deletion of these browser values follows normal
+browser storage controls; deleting the server-side launcher settings does not
+necessarily clear existing per-browser state.
+
+The globally embedded chatbot still uses the `chatbot/default` configuration
+from the administration form. The existing Chatbot/Assistant modules are
+responsible for message processing, conversational state, storage and any
+external provider requests. Providers, hosting regions, legal bases, retention,
+backups and access limits have not been verified for the deployment.
+
+The button remains visible on public pages to guests, as in the previous
+integration. The code does not itself grant anonymous access to AI providers.
+Operators must check actual permissions, consent/ePrivacy requirements, provider
+contracts, session persistence, security, retention and accessibility with the
+installed WordPress theme and operating environment. The source does not prove
+GDPR compliance or WCAG conformance in production.

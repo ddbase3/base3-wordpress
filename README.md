@@ -26,3 +26,66 @@ php wp-content/plugins/base3-wordpress/modules/Base3WordPress/test/Adapter/Base3
 This test checks endpoint generation and dispatch boundaries using stubs. It
 does **not** replace an integration check of upload, download, and HTTP status
 codes in an installed WordPress instance.
+
+## Global WordPress chatbot
+
+`Base3WordPressLab` injects the **single shared ClientStack
+GlobalChatbotLauncher ES module** on frontend pages (`wp_footer`) and WordPress
+admin pages (`admin_footer`), provided the host renders its normal footer
+hooks. The project renders only the hidden module configuration element and a
+`<script type="module">` reference to
+`ClientStack/assets/globalchatbotlauncher/index.js`. Styles, window controls,
+keyboard resizing and navigation restoration come from the matching ClientStack
+assets; the old WordPress-specific launcher JS/CSS is no longer used.
+
+After pulling ClientStack to `wp-content/plugins/base3-wordpress/modules/ClientStack/`,
+its `assets/globalchatbotlauncher/` directory must exist and contain the
+published `dev/GlobalChatbotLauncher/src/` files. Pull **before** installing
+this patch. WordPress' `IAssetResolver` resolves module assets from their actual
+module location. On initial load it enqueues the shared CSS and assetloader;
+opening the button fetches the existing `chatbotdisplay` output through the
+normal `base3_dispatch` action. No new AJAX action or display implementation is
+created. The shared module inserts the resulting display markup and scripts into
+the page, rather than using an iframe.
+
+The global identity is **`chatbot/default`**, managed by
+**BASE3 -> Tools -> Chatbot -> Configuration**. The adjacent **Launcher** tab
+uses the existing `globalchatbotlauncherconfigdisplay` from ClientStack,
+persisting shared presentation flags under `global-chatbot-launcher/default`:
+floating window, dialog, sidebar, full window, fullscreen, resizing, selected
+mode and reopening behaviour. These are presentation-only settings; the chatbot
+backend and configuration continue to belong to `chatbot/default`.
+
+Content-embedded chatbots remain independent and can use their own
+`config_group` / `config_name`, for example:
+
+```text
+[base3 name="chatbotdisplay" data='{"config_group":"content","config_name":"support"}']
+```
+
+The shortcode does not create a configuration form; the relevant owner must
+provide one for each separate content chatbot identity. The global administration
+form is not applied to them.
+
+**The launcher remains visible to anonymous site visitors** as before. This is
+not an authorization decision; the existing BASE3 services determine whether
+chat operations can run. Verify public access, model cost limits, session
+handling and provider settings before production use. Also test the five window
+modes across frontend themes and WordPress administration, particularly the
+sidebar (which docks to `body`).
+
+Remove the obsolete project-owned JS/CSS after deploying the new implementation:
+
+```bash
+sh ./remove-obsolete-wordpress-chatbot-launcher-assets.sh
+```
+
+Isolated project tests (ClientStack checkout required):
+
+```bash
+php wp-content/plugins/base3-wordpress/modules/Base3WordPressLab/test/GlobalChatbotSmokeTest.php
+node wp-content/plugins/base3-wordpress/modules/Base3WordPressLab/test/GlobalChatbotDomSmokeTest.js
+```
+
+These checks validate composition, URLs, settings flags and ES-module exports,
+but do not replace real WordPress/browser integration tests.
