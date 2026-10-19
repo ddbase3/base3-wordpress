@@ -89,3 +89,26 @@ node wp-content/plugins/base3-wordpress/modules/Base3WordPressLab/test/GlobalCha
 
 These checks validate composition, URLs, settings flags and ES-module exports,
 but do not replace real WordPress/browser integration tests.
+
+## Single-site BASE3 authorization (WordPress)
+
+The WordPress integration uses the shared BASE3 `IAuthorizationService` and
+`UserCriterionEvaluator`; it does not retain a separate `IUsermanager::can()`
+permission engine. Native WordPress capabilities and meta-capabilities remain
+authoritative for WordPress resources. WordPress administrators see reduced
+BASE3 Tools navigation; only explicit membership in BASE3 `development` enables
+the complete catalog and the Groups/Features configuration displays.
+
+**Before installing**: configure the initial project-maintainer login in
+`wp-config.php` as
+`define('BASE3_WORDPRESS_DEVELOPER_USERNAMES', ['your-actual-wp-login']);`.
+That account must also have native WordPress `manage_options` to edit the
+settings. Never automatically assign `development` to every administrator.
+
+Features can use BASE3 groups, WordPress users, WordPress native roles and
+schema-backed criteria. See
+[WordPress authorization guide](modules/Base3WordPress/docs/authorization-wordpress.md)
+for runtime boundaries, single-site persistence, bootstrap, nonce protection,
+read-only native rights metadata and regression tests. Anonymous global chatbot
+embedding continues to use the existing generic dispatcher; its public access
+and provider usage require independent review.

@@ -5,7 +5,7 @@ not a legal privacy notice or a statement of deployment-wide compliance.
 
 The generic AJAX bridge dispatches requests into BASE3 components. For the
 FileManager, the component requires `system/admin` authorization through
-`IUsermanager`, a valid WordPress admin-display nonce, and a current user ID.
+`IAuthorizationService`, a valid WordPress admin-display nonce, and a current user ID.
 This ID is used to associate upload sessions with their initiating user.
 Uploads and downloaded file contents may contain personal data supplied by
 administrators. The bridge does not add a new third-party transfer.
@@ -72,3 +72,28 @@ provides `#wpadminbar` as the host header. ClientStack temporarily adjusts
 its inline layout on desktop so the header ends at the sidebar. The panel is displayed
 above the administration bar. The previous header styles are restored on
 close. This introduces no new request, tracking, storage or data recipient.
+
+## BASE3 authorization and administrative audiences (2026-10-19)
+
+The WordPress bridge now registers one `IAuthorizationService` authority (`wordpress`)
+that delegates global and resource meta-capability decisions to WordPress native
+capability functions. The framework feature checks evaluate code-discovered
+`IFeature` audiences against effective BASE3 groups and `IUserCriterion`s.
+WordPress user IDs, login/email identity attributes, native role slugs, configured
+group names/descriptions and installed criterion data may be read in memory.
+The host-owned BASE3 settings datasets are `base3wordpress/groups` and
+`base3_authorization_features/catalog`. These settings use the already active
+WordPress database-backed `ISettingsStore`, not additional WordPress accounts
+or a new BASE3 permission table.
+
+Administrative BASE3 displays reached through WordPress AJAX require native
+`manage_options`, developer membership for advanced tools, and the same-origin
+WordPress nonce before display instantiation. Groups/Features writes have an
+additional action nonce. Public chatbot outputs and feature-gated games retain
+explicitly separate visibility; this integration does not grant anonymous users
+administrative access. Code-defined developer accounts can be configured as
+exact native logins (or complete verified addresses) in `wp-config.php` and must
+be revoked there. Browser-side accessibility of controls, configured native
+WordPress permissions, private data directory protection (especially Nginx),
+retention/deletion, backups, logging and legal notices remain deployment-specific
+and were not verified from the uploaded sources.

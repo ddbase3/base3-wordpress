@@ -5,6 +5,7 @@ namespace Base3WordPressBridge;
 use Base3\Api\IAssetResolver;
 use Base3\Api\IClassMap;
 use Base3\Api\IDisplay;
+use Base3\Usermanager\Api\IUsermanager;
 use Base3WordPress\Api\IBase3WordPressSettings;
 use RuntimeException;
 
@@ -62,6 +63,27 @@ final class AdminBridge {
 		echo '</div>';
 	}
 
+	/**
+	 * Enforces the project catalog at the shared WordPress AJAX dispatch boundary.
+	 * Public displays (chatbot/game) are not in the protected catalog; they retain
+	 * their own service-level authorization, including anonymous access where valid.
+	 */
+	public static function canDispatch(string $displayName, bool $ajax): bool {
+		$container = Runtime::container();
+		$settings = $container->get(IBase3WordPressSettings::class);
+		$level = $settings->getAdministrationAccessLevel($displayName);
+		if ($level === null) return true;
+		if (!current_user_can('manage_options')) return false;
+		if ($level === 'development') {
+			$member = false;
+			foreach ($container->get(IUsermanager::class)->getGroups() as $group) {
+				if ((string)$group->name === 'development') $member = true;
+			}
+			if (!$member) return false;
+		}
+		return !$ajax || check_ajax_referer('base3_admin_display', '_wpnonce', false) !== false;
+	}
+
 	private static function enqueueToolAssets(): void {
 		Runtime::boot();
 		$resolver = Runtime::container()->get(IAssetResolver::class);
@@ -80,6 +102,8 @@ final class AdminBridge {
 		wp_enqueue_script('jquery-ui-droppable');
 		wp_enqueue_script('jquery-ui-sortable');
 		wp_enqueue_script('jquery-ui-resizable');
+		wp_enqueue_script('base3-wordpress-audience-editor', $resolver->resolve('plugin/Base3WordPress/assets/audience-editor.js'), [], null, false);
+		wp_enqueue_style('base3-wordpress-audience-editor', $resolver->resolve('plugin/Base3WordPress/assets/audience-editor.css'), [], null);
 		wp_enqueue_style(
 			'base3-clientstack-jquery-ui',
 			$resolver->resolve($assetRoot . 'jqueryui/jquery-ui.css'),

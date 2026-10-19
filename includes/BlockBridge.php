@@ -32,6 +32,9 @@ final class BlockBridge {
 		$name = (string) ($attributes['name'] ?? '');
 		$out = (string) ($attributes['out'] ?? 'html');
 		if (!preg_match('/^[a-z0-9_-]+$/i', $name) || !preg_match('/^[a-z0-9]+$/i', $out)) return '';
+		// Admin-classified BASE3 displays are never embedded in public post content.
+		$settings = Runtime::container()->get(\Base3WordPress\Api\IBase3WordPressSettings::class);
+		if ($settings->getAdministrationAccessLevel($name) !== null) return '';
 		$data = $attributes['data'] ?? [];
 		if (is_string($data)) {
 			if (trim($data) === '') {

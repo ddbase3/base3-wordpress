@@ -27,6 +27,12 @@ final class AjaxBridge {
 			wp_die('Invalid BASE3 request.', '', ['response' => 400]);
 		}
 
+		// Authentication and admin classification precede class-map instantiation.
+		Runtime::container()->get(IAccesscontrol::class)->authenticate();
+		if (!AdminBridge::canDispatch($name, true)) {
+			wp_die('BASE3 administration access denied.', '', ['response' => 403]);
+		}
+
 		$map = Runtime::container()->get(IClassMap::class);
 		// IDisplay extends IOutput, so resolve the more specific contract first.
 		$display = $map->getInstanceByInterfaceName(IDisplay::class, $name);
@@ -45,7 +51,6 @@ final class AjaxBridge {
 			$display->setData($decoded['value']);
 		}
 
-		Runtime::container()->get(IAccesscontrol::class)->authenticate();
 		$types = ['json' => 'application/json', 'xml' => 'application/xml', 'txt' => 'text/plain', 'css' => 'text/css', 'js' => 'application/javascript'];
 		header('Content-Type: ' . ($types[$out] ?? 'text/html') . '; charset=utf-8');
 		header('X-Content-Type-Options: nosniff');
