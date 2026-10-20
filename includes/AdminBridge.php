@@ -102,8 +102,6 @@ final class AdminBridge {
 		wp_enqueue_script('jquery-ui-droppable');
 		wp_enqueue_script('jquery-ui-sortable');
 		wp_enqueue_script('jquery-ui-resizable');
-		wp_enqueue_script('base3-wordpress-audience-editor', $resolver->resolve('plugin/Base3WordPress/assets/audience-editor.js'), [], null, false);
-		wp_enqueue_style('base3-wordpress-audience-editor', $resolver->resolve('plugin/Base3WordPress/assets/audience-editor.css'), [], null);
 		wp_enqueue_style(
 			'base3-clientstack-jquery-ui',
 			$resolver->resolve($assetRoot . 'jqueryui/jquery-ui.css'),

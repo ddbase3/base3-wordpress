@@ -88,8 +88,13 @@ or a new BASE3 permission table.
 
 Administrative BASE3 displays reached through WordPress AJAX require native
 `manage_options`, developer membership for advanced tools, and the same-origin
-WordPress nonce before display instantiation. Groups/Features writes have an
-additional action nonce. Public chatbot outputs and feature-gated games retain
+WordPress nonce before display instantiation. The shared ClientStack Groups and
+Features displays also enforce `system/admin` and the WordPress adapter's
+explicit development membership check. Their writes use per-display BASE3
+session CSRF tokens; `WordPressSession` binds those tokens to the trusted WP
+login session. The former WordPress-only audience form/assets are removed from
+the administration page; stored rules and WordPress native permissions are not
+rewritten. Public chatbot outputs and feature-gated games retain
 explicitly separate visibility; this integration does not grant anonymous users
 administrative access. Code-defined developer accounts can be configured as
 exact native logins (or complete verified addresses) in `wp-config.php` and must

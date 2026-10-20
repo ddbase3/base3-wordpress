@@ -112,3 +112,24 @@ for runtime boundaries, single-site persistence, bootstrap, nonce protection,
 read-only native rights metadata and regression tests. Anonymous global chatbot
 embedding continues to use the existing generic dispatcher; its public access
 and provider usage require independent review.
+
+## Shared authorization administration (WordPress)
+
+The WordPress project catalog in `modules/Base3WordPressLab` uses the existing
+`ClientStack` displays `authorizationgroupsdisplay`,
+`authorizationfeaturesdisplay` and `authorizationadministrationdisplay`.
+`Base3WordPress` supplies the host-owned audience and native authorization
+services; the native role/capability viewer remains read-only. The old
+WordPress-specific audience display/assets are removed by the accompanying
+cleanup script, not replaced with another WordPress template.
+
+Use updated `ClientStack` (commit `a0fe672`) and `UiFoundation` (commit
+`83cc937`) with this integration. The installed manifest versions alone do
+not distinguish those new October 2026 interface/display commits.
+
+After extracting the patch from the BASE3 WordPress plugin directory, run
+`sh tools/remove-obsolete-wordpress-audience-editor.sh "$PWD"` and the
+smoke tests in `modules/Base3WordPress/docs/authorization-wordpress.md`.
+A native WordPress role slug is selected via `Criterion` >
+`wordpressrolecriterion` in the unchanged shared UI; its numeric native role
+field is not a WordPress role-slug selector.
