@@ -58,11 +58,26 @@ responsible for message processing, conversational state, storage and any
 external provider requests. Providers, hosting regions, legal bases, retention,
 backups and access limits have not been verified for the deployment.
 
-The button remains visible on public pages to guests, as in the previous
-integration. The code does not itself grant anonymous access to AI providers.
-Operators must check actual permissions, consent/ePrivacy requirements, provider
-contracts, session persistence, security, retention and accessibility with the
-installed WordPress theme and operating environment. The source does not prove
+The floating button and its existing `chatbot/default` AJAX display load
+are now gated by the project-owned BASE3 feature permission
+`feature/globalchatbotlauncherfeature`. The default audience explicitly allows
+`anonymous` and `authenticated`; an operator may restrict this in the current
+Features administration. The WordPress authorization adapter evaluates the
+trusted user and BASE3 group/criterion metadata; the audience is stored as an
+override in the existing `base3_authorization_features/catalog` settings
+record. Such expressions may include native user IDs, role slugs, identity
+attributes and configured criteria. No new record, cookie, tracking event or
+third-party transfer is added by the feature check. Authorization denial
+prevents adding the launcher and returns HTTP 403 at the existing AJAX
+`chatbotdisplay` load for the global configuration identity. Other chatbot
+endpoints and block/shortcode rendering are unchanged, including content
+embedding using `chatbot/default`; the feature is not a general chatbot
+access restriction.
+
+Operators must check actual chatbot/provider permissions, consent/ePrivacy
+requirements, provider contracts, session persistence, security, retention,
+backup deletion and accessibility with the installed WordPress theme and
+operating environment. The source does not prove
 GDPR compliance or WCAG conformance in production.
 
 ## WordPress administrator bar and docked launcher

@@ -59,8 +59,14 @@ final class AjaxBridge {
 		wp_die('', '', ['response' => http_response_code() ?: 200]);
 	}
 
-	/** @return array{valid:bool,value:mixed} */
-	private static function decodeDisplayData(string $data): array {
+	/**
+	 * Decodes the existing BASE3 display-data parameter for the dispatcher and host-owned request guards.
+	 * @param string $data URL-safe base64-encoded JSON; malformed or oversized input is invalid
+	 * Invalid or unparseable input is reported by the result rather than thrown.
+	 * @return array{valid:bool,value:mixed} The JSON value when valid, otherwise null and valid=false
+	 * @sideeffects None
+	 */
+	public static function decodeDisplayData(string $data): array {
 		$data = trim($data);
 		if ($data === '' || strlen($data) > self::MAX_DISPLAY_DATA_LENGTH || !preg_match('/^[A-Za-z0-9_-]+={0,2}$/', $data)) {
 			return ['valid' => false, 'value' => null];

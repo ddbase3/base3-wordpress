@@ -67,12 +67,28 @@ The shortcode does not create a configuration form; the relevant owner must
 provide one for each separate content chatbot identity. The global administration
 form is not applied to them.
 
-**The launcher remains visible to anonymous site visitors** as before. This is
-not an authorization decision; the existing BASE3 services determine whether
-chat operations can run. Verify public access, model cost limits, session
-handling and provider settings before production use. Also test the five window
-modes across frontend themes and WordPress administration, particularly the
-sidebar (which docks to `body`).
+**The global floating launcher is a configurable BASE3 feature**:
+`Base3WordPressLab\Feature\GlobalChatbotLauncherFeature` owns
+`feature/globalchatbotlauncherfeature`. Its default audience includes both
+`anonymous` and `authenticated`, preserving the previous public visibility.
+Operators can change the audience in BASE3 > Tools > BASE3 > Features; a stored
+empty audience denies every visitor. The project checks `IAuthorizationService`
+before loading launcher assets or rendering its footer markup. The same project
+component registers an access guard with the **existing**
+`wp_ajax_base3_dispatch` and `wp_ajax_nopriv_base3_dispatch` WordPress hooks
+(priority 0), before the shared dispatcher. It checks the decoded
+`chatbotdisplay` identity `chatbot/default` and returns HTTP 403 when access is
+denied, using the dispatcher's existing data decoder. No new AJAX action,
+route, service or permission subsystem is introduced.
+
+Blocks and `[base3 ...]` shortcodes are still rendered directly by
+`BlockBridge::render()` and are not governed by this launcher feature, even
+when explicitly configured with `chatbot/default`. The generic conversation
+and agent endpoints remain unchanged. The new feature controls **only** the
+floating-launcher UI and the AJAX display-load request for its configured
+identity, not a general chatbot-service access policy. Verify feature audience
+behavior for logged-in and anonymous visitors, public provider limits,
+session handling and the five window modes in the actual WordPress deployment.
 
 Remove the obsolete project-owned JS/CSS after deploying the new implementation:
 
