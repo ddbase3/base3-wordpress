@@ -11,7 +11,7 @@ Uploads and downloaded file contents may contain personal data supplied by
 administrators. The bridge does not add a new third-party transfer.
 
 `WordPressManagedFileStorageService` stores managed files under
-`DIR_LOCAL/storage/<mode>/<owner-hash>/`. `WordPressFileUploadService` uses
+`DIR_LOCAL/storage/<mode>/<owner-hash>/`. `ClientStack\FileManager\FileUploadService` uses
 `DIR_LOCAL/filemanager-upload/<owner-hash>/<upload-id>/` for upload-session
 metadata and chunks. The default `DIR_LOCAL` is
 `WP_CONTENT_DIR/base3-private/`, unless the application configures
@@ -59,10 +59,10 @@ external provider requests. Providers, hosting regions, legal bases, retention,
 backups and access limits have not been verified for the deployment.
 
 The floating button and its existing `chatbot/default` AJAX display load
-are now gated by the project-owned BASE3 feature permission
-`feature/globalchatbotlauncherfeature`. The default audience explicitly allows
-`anonymous` and `authenticated`; an operator may restrict this in the current
-Features administration. The WordPress authorization adapter evaluates the
+are gated by the canonical ClientStack BASE3 feature permission
+`feature/globalchatbotlauncherfeature`. The default audience is `authenticated`;
+the demo does not migrate the old WordPressLab public audience and an operator
+may explicitly change it in the shared Features administration. The WordPress authorization adapter evaluates the
 trusted user and BASE3 group/criterion metadata; the audience is stored as an
 override in the existing `base3_authorization_features/catalog` settings
 record. Such expressions may include native user IDs, role slugs, identity
@@ -102,10 +102,12 @@ WordPress database-backed `ISettingsStore`, not additional WordPress accounts
 or a new BASE3 permission table.
 
 Administrative BASE3 displays reached through WordPress AJAX require native
-`manage_options`, developer membership for advanced tools, and the same-origin
-WordPress nonce before display instantiation. The shared ClientStack Groups and
-Features displays also enforce `system/admin` and the WordPress adapter's
-explicit development membership check. Their writes use per-display BASE3
+`manage_options`, project `development` membership for advanced tools, and
+the same-origin WordPress nonce before display instantiation. The project group
+includes WordPress site administrators with native `manage_options`; a separate
+identity allowlist is not required. The shared ClientStack Groups and Features
+displays also enforce `system/admin` and the WordPress adapter's development
+membership check. Their writes use per-display BASE3
 session CSRF tokens; `WordPressSession` binds those tokens to the trusted WP
 login session. The former WordPress-only audience form/assets are removed from
 the administration page; stored rules and WordPress native permissions are not
@@ -117,3 +119,18 @@ be revoked there. Browser-side accessibility of controls, configured native
 WordPress permissions, private data directory protection (especially Nginx),
 retention/deletion, backups, logging and legal notices remain deployment-specific
 and were not verified from the uploaded sources.
+
+### November 2026 WordPress-hosted generic settings and FileManager
+
+The project no longer persists or produces a duplicate static administration
+catalog. Shared, classmap-discovered `ISettingsTab` entries use existing
+feature audiences and WordPress-native `manage_options` checks for protected
+operations. The FileManager HTTP and chunk-upload implementations are now
+provided by ClientStack, while `WordPressManagedFileStorageService`, the owner
+`chatbot/default`, the collection-mode directories and temporary upload root
+remain unchanged. Old launcher and WordPress-specific FileManager classes are
+removed by an explicit cleanup script that never touches private files.
+The storage root is `WP_CONTENT_DIR/base3-private/` unless explicitly configured.
+No additional personal-data store or new external recipient was introduced.
+Deletion, backups, webserver access restrictions, user consent and provider
+policies remain deployment-specific and are not certified by this source audit.

@@ -5,17 +5,15 @@ The WordPress `admin-ajax.php` transport uses a single BASE3 action,
 `IClassMap`. WordPress reserves the `action` parameter; `WordPressRequest`
 continues to translate a BASE3 `action` value through `base3_action`.
 
-The FileManager does not have a separate WordPress AJAX command. The
-`Base3WordPressFileManagerOutput` component is discovered via `IOutput` and
-calls the existing `WordPressFileManagerHttpService`. Its endpoints are created
-by `Base3WordPressLabSettings` through `ILinkTargetService`, preserving all
-13 ClientStack operations and the `chatbot/default` storage owner.
-
-The output requires a BASE3 `system/admin` permission, a valid WordPress
-`base3_admin_display` nonce, and an authenticated user identity before any
-file operation. WordPress' native authentication and capability mapping remain
-in the existing host adapter. The underlying storage and chunk-upload services
-are unchanged.
+The FileManager uses the existing WordPress `base3_dispatch` HTTP transport.
+`Base3WordPressFileManagerOutput` authorizes native `system/admin`, WordPress
+`base3_admin_display` nonce and an authenticated user before delegating the
+13 actions to the canonical `ClientStack\FileManager\FileManagerHttpService`.
+`Base3WordPress` composes the canonical `FileUploadService` with the unchanged
+WordPress `IManagedFileStorageService` and `DIR_LOCAL/filemanager-upload/`.
+`Base3WordPressLab` owns `chatbot/default` configuration and supplies the
+canonical display data to discoverable `ChatbotconfigSettingsTab`.
+No FileBridge plugin is required, and no stored resource is moved.
 
 For a standalone, isolated dispatch test (without a WordPress runtime):
 
@@ -42,7 +40,7 @@ After pulling ClientStack to `wp-content/plugins/base3-wordpress/modules/ClientS
 its `assets/globalchatbotlauncher/` directory must exist and contain the
 published `dev/GlobalChatbotLauncher/src/` files. Pull **before** installing
 this patch. WordPress' `IAssetResolver` resolves module assets from their actual
-module location. On initial load it enqueues the shared CSS and assetloader;
+module location. On initial load it enqueues the shared assetloader and renders the ClientStack CSS reference;
 opening the button fetches the existing `chatbotdisplay` output through the
 normal `base3_dispatch` action. No new AJAX action or display implementation is
 created. The shared module inserts the resulting display markup and scripts into
@@ -68,9 +66,9 @@ provide one for each separate content chatbot identity. The global administratio
 form is not applied to them.
 
 **The global floating launcher is a configurable BASE3 feature**:
-`Base3WordPressLab\Feature\GlobalChatbotLauncherFeature` owns
-`feature/globalchatbotlauncherfeature`. Its default audience includes both
-`anonymous` and `authenticated`, preserving the previous public visibility.
+`ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature` is the sole owner
+of `feature/globalchatbotlauncherfeature`. Its default audience is `authenticated`.
+Previous WordPressLab audience overrides are not migrated on this demo site.
 Operators can change the audience in BASE3 > Tools > BASE3 > Features; a stored
 empty audience denies every visitor. The project checks `IAuthorizationService`
 before loading launcher assets or rendering its footer markup. The same project
@@ -90,11 +88,14 @@ identity, not a general chatbot-service access policy. Verify feature audience
 behavior for logged-in and anonymous visitors, public provider limits,
 session handling and the five window modes in the actual WordPress deployment.
 
-Remove the obsolete project-owned JS/CSS after deploying the new implementation:
+Remove all replaced static catalog classes, WordPress duplicate upload/HTTP
+services and old WordPress launcher assets after extracting the patch:
 
-```bash
-sh ./remove-obsolete-wordpress-chatbot-launcher-assets.sh
+```sh
+sh scripts/remove-obsolete-wordpress-integration.sh
 ```
+
+This script does not touch `wp-content/base3-private` or any uploaded data.
 
 Isolated project tests (ClientStack checkout required):
 
@@ -111,15 +112,11 @@ but do not replace real WordPress/browser integration tests.
 The WordPress integration uses the shared BASE3 `IAuthorizationService` and
 `UserCriterionEvaluator`; it does not retain a separate `IUsermanager::can()`
 permission engine. Native WordPress capabilities and meta-capabilities remain
-authoritative for WordPress resources. WordPress administrators see reduced
-BASE3 Tools navigation; only explicit membership in BASE3 `development` enables
-the complete catalog and the Groups/Features configuration displays.
-
-**Before installing**: configure the initial project-maintainer login in
-`wp-config.php` as
-`define('BASE3_WORDPRESS_DEVELOPER_USERNAMES', ['your-actual-wp-login']);`.
-That account must also have native WordPress `manage_options` to edit the
-settings. Never automatically assign `development` to every administrator.
+authoritative for WordPress resources. The WordPress project grants BASE3 `development` membership to accounts with
+native `manage_options`, so site administrators can reach the Groups/Features
+configuration without a separate bootstrap allowlist. Optional exact logins or
+verified email addresses may extend membership, but cannot replace WordPress's
+native administration decision for protected operations.
 
 Features can use BASE3 groups, WordPress users, WordPress native roles and
 schema-backed criteria. See
@@ -131,8 +128,8 @@ and provider usage require independent review.
 
 ## Shared authorization administration (WordPress)
 
-The WordPress project catalog in `modules/Base3WordPressLab` uses the existing
-`ClientStack` displays `authorizationgroupsdisplay`,
+The WordPress project uses classmap-discovered `UiFoundation\Api\ISettingsTab`
+contributions and the existing `ClientStack` displays `authorizationgroupsdisplay`,
 `authorizationfeaturesdisplay` and `authorizationadministrationdisplay`.
 `Base3WordPress` supplies the host-owned audience and native authorization
 services; the native role/capability viewer remains read-only. The old
@@ -143,9 +140,38 @@ Use updated `ClientStack` (commit `a0fe672`) and `UiFoundation` (commit
 `83cc937`) with this integration. The installed manifest versions alone do
 not distinguish those new October 2026 interface/display commits.
 
-After extracting the patch from the BASE3 WordPress plugin directory, run
-`sh tools/remove-obsolete-wordpress-audience-editor.sh "$PWD"` and the
+After extracting the patch in the `base3-wordpress` plugin root, run
+`sh scripts/remove-obsolete-wordpress-integration.sh` and the
 smoke tests in `modules/Base3WordPress/docs/authorization-wordpress.md`.
 A native WordPress role slug is selected via `Criterion` >
 `wordpressrolecriterion` in the unchanged shared UI; its numeric native role
 field is not a WordPress role-slug selector.
+
+## Dynamic administration after the 2026-11-06 integration
+
+Native **BASE3 > Werkzeuge** renders `settingsdisplay`. The shared ClientStack
+settings renderer enumerates the current `ISettingsTab` classmap; the project
+no longer owns static lists of provider, chatbot, developer or game tabs.
+Direct `base3_dispatch` display calls are protected by WordPress authorization
+and a WordPress admin nonce, then the owning tab's existing feature decision.
+Game entries remain independently embeddable. For the BASE3 feature editor,
+native WordPress `manage_options` provides the project `development` membership;
+no `wp-config.php` allowlist is required. Neither existing feature audiences nor
+the former public launcher audience are migrated. The WordPress site is a single-site demo (tested version 7.1.4).
+
+The two project modules have their own Git ownership. This patch updates the
+bridge and their source trees, not ClientStack, Chatbot, UiFoundation or other
+generic modules. Do not reset or delete independently installed generic modules.
+
+## Native WordPress administrator settings regression (2026-11-06)
+
+The WordPress host must not register its own `anonymous` and `authenticated`
+`IGroup` definitions alongside the canonical `Base3Framework` definitions.
+The resulting duplicate group names made WordPress authorization fail closed,
+so the generic `SettingsDisplay` showed no available entries even for native
+site administrators. `scripts/remove-obsolete-wordpress-integration.sh` removes
+the former duplicate classes. The WordPress `administration` group and
+project-owned `development` group remain, including the native `manage_options`
+criterion. After extracting the patch, run the removal script before opening
+the Tools page. The real-classmap regression test is at
+`modules/Base3WordPress/test/Authorization/WordPressGroupDiscoverySmokeTest.php`.

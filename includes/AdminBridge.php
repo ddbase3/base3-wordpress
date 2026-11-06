@@ -5,9 +5,12 @@ namespace Base3WordPressBridge;
 use Base3\Api\IAssetResolver;
 use Base3\Api\IClassMap;
 use Base3\Api\IDisplay;
-use Base3\Usermanager\Api\IUsermanager;
-use Base3WordPress\Api\IBase3WordPressSettings;
+use Base3\Authorization\Api\IAuthorizationService;
+use Base3\Authorization\Dto\AuthorizationRequest;
+use Base3\Usermanager\Permission;
 use RuntimeException;
+use Throwable;
+use UiFoundation\Api\ISettingsTab;
 
 final class AdminBridge {
 
@@ -38,63 +41,72 @@ final class AdminBridge {
 	public static function renderTools(): void {
 		if (!current_user_can('manage_options')) wp_die('Insufficient permissions.');
 		Runtime::boot();
-		$container = Runtime::container();
-		$settings = $container->get(IBase3WordPressSettings::class);
-		if (!$settings instanceof IBase3WordPressSettings) {
-			throw new RuntimeException('BASE3 WordPress administration settings service is unavailable.');
-		}
-
-		$display = $container->get(IClassMap::class)->getInstanceByInterfaceName(IDisplay::class, 'tabcontroldisplay');
+		$display = Runtime::container()->get(IClassMap::class)->getInstanceByInterfaceName(IDisplay::class, 'settingsdisplay');
 		if (!$display instanceof IDisplay) {
-			throw new RuntimeException('BASE3 ClientStack TabControlDisplay is not installed.');
+			throw new RuntimeException('BASE3 ClientStack SettingsDisplay is not installed.');
 		}
-
-		$active = isset($_GET['view']) && is_scalar($_GET['view'])
-			? trim((string) wp_unslash($_GET['view']))
-			: '';
-		$display->setData([
-			'tabs' => $settings->getAdministrationConfig(),
-			'active' => $active,
-			'empty_message' => 'Keine BASE3-Werkzeuge installiert.'
-		]);
-
 		echo '<div class="wrap"><h1>BASE3 Werkzeuge</h1>';
 		echo $display->getOutput('html', false);
 		echo '</div>';
 	}
 
-	/**
-	 * Enforces the project catalog at the shared WordPress AJAX dispatch boundary.
-	 * Public displays (chatbot/game) are not in the protected catalog; they retain
-	 * their own service-level authorization, including anonymous access where valid.
-	 */
+	/** Checks native administration and the feature's existing visibility decision. */
 	public static function canDispatch(string $displayName, bool $ajax): bool {
-		$container = Runtime::container();
-		$settings = $container->get(IBase3WordPressSettings::class);
-		$level = $settings->getAdministrationAccessLevel($displayName);
-		if ($level === null) return true;
-		if (!current_user_can('manage_options')) return false;
-		if ($level === 'development') {
-			$member = false;
-			foreach ($container->get(IUsermanager::class)->getGroups() as $group) {
-				if ((string)$group->name === 'development') $member = true;
-			}
-			if (!$member) return false;
+		if ($displayName === 'tabcontroldisplay') return false;
+		$tabs = self::settingsTabsForDisplay($displayName);
+		if ($tabs === null) return false;
+		$protected = $displayName === 'settingsdisplay';
+		foreach ($tabs as $tab) {
+			if ($tab->getParentTabName() !== 'gamessettingstab') $protected = true;
 		}
-		return !$ajax || check_ajax_referer('base3_admin_display', '_wpnonce', false) !== false;
+		if (!$protected) return true;
+		try {
+			$authorization = Runtime::container()->get(IAuthorizationService::class);
+			if (!$authorization->decide(new AuthorizationRequest(
+				$authorization->getDefaultAuthority(), Permission::for('system', 'admin')
+			))->isAllowed()) return false;
+			if ($ajax && check_ajax_referer('base3_admin_display', '_wpnonce', false) === false) return false;
+			if ($displayName === 'settingsdisplay') return true;
+			foreach ($tabs as $tab) {
+				if ($tab->getParentTabName() !== 'gamessettingstab' && $tab->isVisible()) return true;
+			}
+			return false;
+		} catch (Throwable) {
+			return false;
+		}
+	}
+
+	/** Restricts settings compositions in shortcode and Gutenberg blocks. */
+	public static function isAdministrationDisplay(string $displayName): bool {
+		if ($displayName === 'settingsdisplay' || $displayName === 'tabcontroldisplay') return true;
+		$tabs = self::settingsTabsForDisplay($displayName);
+		if ($tabs === null) return true;
+		foreach ($tabs as $tab) {
+			if ($tab->getParentTabName() !== 'gamessettingstab') return true;
+		}
+		return false;
+	}
+
+	/** @return list<ISettingsTab>|null Null when discovery is unavailable. */
+	private static function settingsTabsForDisplay(string $displayName): ?array {
+		try {
+			$matches = [];
+			foreach (Runtime::container()->get(IClassMap::class)->getInstancesByInterface(ISettingsTab::class) as $tab) {
+				if ($tab instanceof ISettingsTab && $tab->getDisplayName() === $displayName) {
+					$matches[] = $tab;
+				}
+			}
+			return $matches;
+		} catch (Throwable) {
+			return null;
+		}
 	}
 
 	private static function enqueueToolAssets(): void {
 		Runtime::boot();
 		$resolver = Runtime::container()->get(IAssetResolver::class);
 		$assetRoot = 'plugin/ClientStack/assets/';
-		wp_enqueue_script(
-			'base3-clientstack-assetloader',
-			$resolver->resolve($assetRoot . 'assetloader/assetloader.min.js'),
-			[],
-			null,
-			false
-		);
+		wp_enqueue_script('base3-clientstack-assetloader', $resolver->resolve($assetRoot . 'assetloader/assetloader.min.js'), [], null, false);
 		wp_enqueue_script('jquery-ui-core');
 		wp_enqueue_script('jquery-ui-widget');
 		wp_enqueue_script('jquery-ui-mouse');
@@ -102,11 +114,6 @@ final class AdminBridge {
 		wp_enqueue_script('jquery-ui-droppable');
 		wp_enqueue_script('jquery-ui-sortable');
 		wp_enqueue_script('jquery-ui-resizable');
-		wp_enqueue_style(
-			'base3-clientstack-jquery-ui',
-			$resolver->resolve($assetRoot . 'jqueryui/jquery-ui.css'),
-			[],
-			null
-		);
+		wp_enqueue_style('base3-clientstack-jquery-ui', $resolver->resolve($assetRoot . 'jqueryui/jquery-ui.css'), [], null);
 	}
 }

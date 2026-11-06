@@ -42,10 +42,11 @@ A BASE3 output's `getOutput()` is responsible for deciding whether it may return
 content or perform actions for the current requester. There is no centralized
 allow-list of public `IOutput` or `IDisplay` implementations.
 
-The project module `Base3WordPressLab` supplies the BASE3 administration tab
-configuration for the existing ClientStack `tabcontroldisplay`, rendered under
-**BASE3 > Werkzeuge**. Frontend placement uses the `base3/display` Gutenberg
-block or the `[base3 name="..."]` shortcode.
+The native **BASE3 > Werkzeuge** menu renders ClientStack `settingsdisplay`.
+Each module declares its own `ISettingsTab` entries, discovered by the existing
+classmap and authorized through the existing WordPress host service. The WordPress
+project supplies only `chatbot/default` project-specific display data. Frontend
+placement still uses the `base3/display` Gutenberg block and `[base3]` shortcode.
 
 ## Git ownership
 
