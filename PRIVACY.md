@@ -11,7 +11,7 @@ Uploads and downloaded file contents may contain personal data supplied by
 administrators. The bridge does not add a new third-party transfer.
 
 `WordPressManagedFileStorageService` stores managed files under
-`DIR_LOCAL/storage/<mode>/<owner-hash>/`. `ClientStack\FileManager\FileUploadService` uses
+`DIR_LOCAL/storage/<mode>/<owner-hash>/`. `Base3\ClientStack\FileManager\FileUploadService` uses
 `DIR_LOCAL/filemanager-upload/<owner-hash>/<upload-id>/` for upload-session
 metadata and chunks. The default `DIR_LOCAL` is
 `WP_CONTENT_DIR/base3-private/`, unless the application configures

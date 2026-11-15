@@ -2,7 +2,7 @@
 
 namespace Base3WordPressBridge;
 
-use Base3\Api\IClassMap;
+use Base3\CoreFoundation\Api\IClassMap;
 
 final class RestBridge {
 
@@ -20,7 +20,7 @@ final class RestBridge {
 		return new \WP_REST_Response([
 			'active' => true,
 			'host' => 'WordPress',
-			'frameworkVersion' => Runtime::catalog()->all()['Base3Framework']['version'],
+			'frameworkVersion' => Runtime::catalog()->all()['Core']['version'],
 			'modules' => Runtime::catalog()->getModuleNames(),
 			'classmapApps' => $c->get(IClassMap::class)->getApps()
 		]);

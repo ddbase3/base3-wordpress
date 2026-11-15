@@ -2,7 +2,7 @@
 
 namespace Base3WordPressBridge;
 
-use Base3\Api\IModuleRegistry;
+use Base3\CoreFoundation\Api\IModuleRegistry;
 use RuntimeException;
 
 /** Finds BASE3 modules in the bridge and in every active native WordPress plugin. */
@@ -84,7 +84,9 @@ final class ModuleCatalog implements IModuleRegistry {
 				$namespaces[strtolower($namespace)] = $file;
 			}
 		}
-		if (!isset($modules['Base3Framework'])) throw new RuntimeException('BASE3 Framework module missing.');
+		foreach (['Core', 'CoreFoundation'] as $required) {
+			if (!isset($modules[$required])) throw new RuntimeException('BASE3 ' . $required . ' module missing.');
+		}
 		ksort($modules, SORT_NATURAL | SORT_FLAG_CASE);
 		$this->assertDependencies($modules);
 		return $this->modules = $modules;

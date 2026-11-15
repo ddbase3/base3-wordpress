@@ -2,15 +2,15 @@
 
 namespace Base3WordPressBridge;
 
-use Base3\Api\IAssetResolver;
-use Base3\Api\IClassMap;
-use Base3\Api\IDisplay;
-use Base3\Authorization\Api\IAuthorizationService;
-use Base3\Authorization\Dto\AuthorizationRequest;
-use Base3\Usermanager\Permission;
+use Base3\CoreFoundation\Api\IAssetResolver;
+use Base3\CoreFoundation\Api\IClassMap;
+use Base3\CoreFoundation\Api\IDisplay;
+use Base3\CoreFoundation\Authorization\Api\IAuthorizationService;
+use Base3\CoreFoundation\Authorization\Dto\AuthorizationRequest;
+use Base3\CoreFoundation\Usermanager\Permission;
 use RuntimeException;
 use Throwable;
-use UiFoundation\Api\ISettingsTab;
+use Base3\UiFoundation\Api\ISettingsTab;
 
 final class AdminBridge {
 

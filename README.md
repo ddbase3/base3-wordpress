@@ -8,7 +8,7 @@ continues to translate a BASE3 `action` value through `base3_action`.
 The FileManager uses the existing WordPress `base3_dispatch` HTTP transport.
 `Base3WordPressFileManagerOutput` authorizes native `system/admin`, WordPress
 `base3_admin_display` nonce and an authenticated user before delegating the
-13 actions to the canonical `ClientStack\FileManager\FileManagerHttpService`.
+13 actions to the canonical `Base3\ClientStack\FileManager\FileManagerHttpService`.
 `Base3WordPress` composes the canonical `FileUploadService` with the unchanged
 WordPress `IManagedFileStorageService` and `DIR_LOCAL/filemanager-upload/`.
 `Base3WordPressLab` owns `chatbot/default` configuration and supplies the
@@ -66,7 +66,7 @@ provide one for each separate content chatbot identity. The global administratio
 form is not applied to them.
 
 **The global floating launcher is a configurable BASE3 feature**:
-`ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature` is the sole owner
+`Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature` is the sole owner
 of `feature/globalchatbotlauncherfeature`. Its default audience is `authenticated`.
 Previous WordPressLab audience overrides are not migrated on this demo site.
 Operators can change the audience in BASE3 > Tools > BASE3 > Features; a stored
@@ -128,7 +128,7 @@ and provider usage require independent review.
 
 ## Shared authorization administration (WordPress)
 
-The WordPress project uses classmap-discovered `UiFoundation\Api\ISettingsTab`
+The WordPress project uses classmap-discovered `Base3\UiFoundation\Api\ISettingsTab`
 contributions and the existing `ClientStack` displays `authorizationgroupsdisplay`,
 `authorizationfeaturesdisplay` and `authorizationadministrationdisplay`.
 `Base3WordPress` supplies the host-owned audience and native authorization
@@ -166,7 +166,7 @@ generic modules. Do not reset or delete independently installed generic modules.
 ## Native WordPress administrator settings regression (2026-11-06)
 
 The WordPress host must not register its own `anonymous` and `authenticated`
-`IGroup` definitions alongside the canonical `Base3Framework` definitions.
+`IGroup` definitions alongside the canonical `Core` definitions.
 The resulting duplicate group names made WordPress authorization fail closed,
 so the generic `SettingsDisplay` showed no available entries even for native
 site administrators. `scripts/remove-obsolete-wordpress-integration.sh` removes

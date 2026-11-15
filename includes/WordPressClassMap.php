@@ -8,7 +8,7 @@ use RuntimeException;
 /** Builds the normal BASE3 class map from module manifest namespaces, not directory names. */
 final class WordPressClassMap extends PluginClassMap {
 
-	public function __construct(\Base3\Api\IContainer $container, private readonly ModuleCatalog $catalog) {
+	public function __construct(\Base3\CoreFoundation\Api\IContainer $container, private readonly ModuleCatalog $catalog) {
 		parent::__construct($container);
 	}
 
@@ -40,7 +40,6 @@ final class WordPressClassMap extends PluginClassMap {
 				continue;
 			}
 			if (substr($entry, -4) !== '.php' || substr_count($entry, '.') !== 1) continue;
-			if ($namespace === 'Base3' && $relative === 'Core' && $entry === 'Autoloader.php') continue;
 			$classname = $namespace . '\\' . ($relative === '' ? '' : str_replace('/', '\\', $relative) . '\\') . substr($entry, 0, -4);
 			// Classmaps index only concrete classes. Other declarations are loaded through PSR-4 when needed.
 			if (!class_exists($classname)) continue;

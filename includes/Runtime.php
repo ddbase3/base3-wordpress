@@ -2,8 +2,8 @@
 
 namespace Base3WordPressBridge;
 
-use Base3\Api\IContainer;
-use Base3\Hook\Api\IHookManager;
+use Base3\CoreFoundation\Api\IContainer;
+use Base3\CoreFoundation\Hook\Api\IHookManager;
 use RuntimeException;
 
 final class Runtime {
@@ -93,11 +93,11 @@ final class Runtime {
 		$container = self::container();
 		$workers = $container->get('workers');
 		if (!is_array($workers)) return;
-		$logger = $container->get(\Base3\Logger\Api\ILogger::class);
-		if (!$logger instanceof \Base3\Logger\Api\ILogger) {
+		$logger = $container->get(\Base3\CoreFoundation\Logger\Api\ILogger::class);
+		if (!$logger instanceof \Base3\CoreFoundation\Logger\Api\ILogger) {
 			throw new RuntimeException('BASE3 worker requires ILogger.');
 		}
-		$runner = new \Base3\Worker\MasterWorker($logger, $workers);
+		$runner = new \Base3\Core\Worker\MasterWorker($logger, $workers);
 		ob_start();
 		try {
 			$runner->getOutput('txt', true);
@@ -110,7 +110,9 @@ final class Runtime {
 		$root = dirname(self::pluginFile());
 		$modules = $root . '/modules/';
 		require_once __DIR__ . '/WordPressModuleRoots.php';
-		$framework = WordPressModuleRoots::framework($modules);
+		$coreModules = WordPressModuleRoots::coreModules($modules);
+		$core = $coreModules['Core'];
+		$coreFoundation = $coreModules['CoreFoundation'];
 		$data = defined('BASE3_WORDPRESS_DATA_DIR')
 			? rtrim((string) BASE3_WORDPRESS_DATA_DIR, '/\\') . '/'
 			: rtrim(WP_CONTENT_DIR, '/\\') . '/base3-private/';
@@ -126,17 +128,17 @@ final class Runtime {
 		}
 		if (!is_file($data . 'index.php')) file_put_contents($data . 'index.php', '<?php http_response_code(403); exit;');
 		$definitions = [
-			'DIR_ROOT' => $framework,
-			'DIR_FRAMEWORK' => $framework,
+			'DIR_ROOT' => $core,
+			'DIR_FRAMEWORK' => $core,
 			'DIR_PLUGIN' => $modules,
 			'DIR_BASE3' => $modules,
-			'DIR_SRC' => $framework . 'src/',
-			'DIR_TEST' => $framework . 'test/',
+			'DIR_SRC' => $core . 'src/',
+			'DIR_TEST' => $core . 'test/',
 			'DIR_CNF' => $data . 'cnf/',
 			'DIR_TMP' => $data . 'cache/',
 			'DIR_LOCAL' => $data,
 			'DIR_USERFILES' => $data . 'userfiles/',
-			'DIR_TPL' => $framework . 'tpl/'
+			'DIR_TPL' => $core . 'tpl/'
 		];
 		foreach ($definitions as $name => $value) {
 			if (defined($name) && constant($name) !== $value) {
@@ -145,8 +147,7 @@ final class Runtime {
 			if (!defined($name)) define($name, $value);
 		}
 		if (getenv('DEBUG') === false) putenv('DEBUG=0');
-		require_once $framework . 'src/Core/Autoloader.php';
-		\Base3\Core\Autoloader::register();
+		require_once $coreFoundation . 'src/Api/IModuleRegistry.php';
 		require_once __DIR__ . '/ModuleCatalog.php';
 		self::$catalog = new ModuleCatalog($modules);
 		self::$catalog->all();

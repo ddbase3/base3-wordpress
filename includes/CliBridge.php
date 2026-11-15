@@ -15,7 +15,7 @@ final class CliBridge {
 	/** Regenerate the BASE3 class map after updating PHP sources without changing a module manifest. */
 	public function rebuild(): void {
 		Runtime::boot();
-		Runtime::container()->get(\Base3\Api\IClassMap::class)->generate(true);
+		Runtime::container()->get(\Base3\CoreFoundation\Api\IClassMap::class)->generate(true);
 		\WP_CLI::success('BASE3 class map and constructor cache rebuilt.');
 	}
 

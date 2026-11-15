@@ -31,21 +31,24 @@ final class WordPressModuleRoots {
 		return array_values($roots);
 	}
 
-	/** Locate the framework before its PHP API can be autoloaded. */
-	public static function framework(string $bridgeModulesRoot): string {
-		$found = null;
+	/** Locate Core and CoreFoundation before loading framework interfaces. */
+	public static function coreModules(string $bridgeModulesRoot): array {
+		$found = [];
 		foreach (self::get($bridgeModulesRoot) as $modulesRoot) {
 			foreach (new \DirectoryIterator($modulesRoot) as $entry) {
 				if ($entry->isDot() || !$entry->isDir() || $entry->isLink()) continue;
 				$path = $entry->getRealPath();
 				if ($path === false || !is_file($path . '/base3.json')) continue;
 				$manifest = json_decode((string) file_get_contents($path . '/base3.json'), true);
-				if (!is_array($manifest) || ($manifest['name'] ?? null) !== 'Base3Framework') continue;
-				if ($found !== null) throw new RuntimeException('Multiple BASE3 Framework modules: ' . $found . ' and ' . $path);
-				$found = $path;
+				$name = is_array($manifest) ? ($manifest['name'] ?? null) : null;
+				if ($name !== 'Core' && $name !== 'CoreFoundation') continue;
+				if (isset($found[$name])) throw new RuntimeException('Multiple BASE3 ' . $name . ' modules: ' . $found[$name] . ' and ' . $path);
+				$found[$name] = $path . '/';
 			}
 		}
-		if ($found === null) throw new RuntimeException('The active WordPress plugins do not provide Base3Framework.');
-		return $found . '/';
+		foreach (['Core', 'CoreFoundation'] as $name) {
+			if (!isset($found[$name])) throw new RuntimeException('The active WordPress plugins do not provide ' . $name . '.');
+		}
+		return $found;
 	}
 }

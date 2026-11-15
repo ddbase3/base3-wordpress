@@ -2,10 +2,10 @@
 
 namespace Base3WordPressBridge;
 
-use Base3\Accesscontrol\Api\IAccesscontrol;
-use Base3\Api\IClassMap;
-use Base3\Api\IDisplay;
-use Base3\Api\IOutput;
+use Base3\CoreFoundation\Accesscontrol\Api\IAccesscontrol;
+use Base3\CoreFoundation\Api\IClassMap;
+use Base3\CoreFoundation\Api\IDisplay;
+use Base3\CoreFoundation\Api\IOutput;
 
 final class AjaxBridge {
 

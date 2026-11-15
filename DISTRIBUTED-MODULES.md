@@ -52,7 +52,7 @@ placement still uses the `base3/display` Gutenberg block and `[base3]` shortcode
 
 The host integration repository `base3-wordpress` tracks its own PHP, assets,
 documentation and `modules/.gitignore`. The actual contents of `modules/` are
-installed and updated through separate repositories, including `Base3Framework`,
+installed and updated through separate repositories, including `Core`, `CoreFoundation`,
 `Base3WordPress`, `Base3WordPressLab` and all other installed modules.
 
 Never force-add those module directories to the host integration repository.
